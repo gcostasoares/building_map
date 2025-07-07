@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  const API_BASE = 'https://building-map.onrender.com';
   const burger = document.querySelector('.burger');
   const overlay = document.querySelector('.menu-overlay');
   const overlayLinks = overlay.querySelectorAll('a');
@@ -139,41 +140,39 @@ document.addEventListener('DOMContentLoaded', async () => {
       else path.classList.add('house');
     });
   }
-  fetch('http://localhost:4000/api/buildings')
+  async function populateLists(data) {
+    data.sort((a, b) => a.name.localeCompare(b.name));
+    const statsSection = document.getElementById('statistics');
+    statsSection.innerHTML = `
+      <h2 class="section-title">Statistics</h2>
+      <ul class="stats-list">
+        ${data.map(b => `<li>${b.name}</li>`).join('')}
+      </ul>`;
+    const buildingsSection = document.getElementById('buildings');
+    buildingsSection.innerHTML = `
+      <h2 class="section-title">Buildings</h2>
+      ${data.map(b => `
+        <details>
+          <summary>${b.name}</summary>
+          <ul>
+            <li><strong>Address:</strong> ${b.address}</li>
+            <li><strong>Residents:</strong> ${b.peopleCount} people</li>
+            <li><strong>Status:</strong> ${b.occupied ? 'Occupied' : 'Vacant'}</li>
+            <li><strong>Floors:</strong> ${b.floors}</li>
+            <li><strong>Built in:</strong> ${b.yearBuilt}</li>
+            <li><strong>Last renovated:</strong> ${b.lastRenovationYear}</li>
+          </ul>
+        </details>
+      `).join('')}`;
+  }
+  fetch(`${API_BASE}/api/buildings`)
     .then(r => r.json())
     .then(data => {
       data.forEach(b => buildingMap.set(b.name, b));
       applyBuildingColours();
+      populateLists(data);
     })
     .catch(err => console.error(err));
-  async function populateLists() {
-  const res = await fetch('http://localhost:4000/api/buildings');
-  const data = await res.json();
-  data.sort((a, b) => a.name.localeCompare(b.name));
-  const statsSection = document.getElementById('statistics');
-  statsSection.innerHTML = `
-    <h2 class="section-title">Statistics</h2>
-    <ul class="stats-list">
-      ${data.map(b => `<li>${b.name}</li>`).join('')}
-    </ul>`;
-  const buildingsSection = document.getElementById('buildings');
-  buildingsSection.innerHTML = `
-    <h2 class="section-title">Buildings</h2>
-    ${data.map(b => `
-      <details>
-        <summary>${b.name}</summary>
-        <ul>
-          <li><strong>Address:</strong> ${b.address}</li>
-          <li><strong>Residents:</strong> ${b.peopleCount} people</li>
-          <li><strong>Status:</strong> ${b.occupied ? 'Occupied' : 'Vacant'}</li>
-          <li><strong>Floors:</strong> ${b.floors}</li>
-          <li><strong>Built in:</strong> ${b.yearBuilt}</li>
-          <li><strong>Last renovated:</strong> ${b.lastRenovationYear}</li>
-        </ul>
-      </details>
-    `).join('')}`;
-}
-  populateLists();
   svg.querySelectorAll('path[id^="house"]').forEach(path => {
     const rawId = path.id.replace(/^house\s*/, '');
     const name = rawId.normalize('NFC');
