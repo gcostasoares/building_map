@@ -93,6 +93,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       originalZoomAtCursor(factor);
     };
   }
+  let isTouchPanning = false;
+  let touchStartPt = {};
+  let touchStartVB = {};
+  wrapper.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      isTouchPanning = true;
+      touchStartPt = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      const [x, y] = getViewBox();
+      touchStartVB = { x, y };
+    }
+  });
+  wrapper.addEventListener('touchmove', e => {
+    if (isTouchPanning && e.touches.length === 1) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - touchStartPt.x;
+      const dy = e.touches[0].clientY - touchStartPt.y;
+      const [, , w, h] = getViewBox();
+      const rect = svg.getBoundingClientRect();
+      let nx = touchStartVB.x - dx * (w / rect.width);
+      let ny = touchStartVB.y - dy * (h / rect.height);
+      nx = clamp(nx, origX, origX + origW - w);
+      ny = clamp(ny, origY, origY + origH - h);
+      setViewBox(nx, ny, w, h);
+    }
+  });
+  wrapper.addEventListener('touchend', e => {
+    if (e.touches.length === 0) isTouchPanning = false;
+  });
   function getTouchDist(t1, t2) {
     const dx = t1.clientX - t2.clientX;
     const dy = t1.clientY - t2.clientY;
@@ -142,14 +171,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   async function populateLists(data) {
     data.sort((a, b) => a.name.localeCompare(b.name));
-    const statsSection = document.getElementById('statistics');
-    statsSection.innerHTML = `
+    document.getElementById('statistics').innerHTML = `
       <h2 class="section-title">Statistics</h2>
-      <ul class="stats-list">
-        ${data.map(b => `<li>${b.name}</li>`).join('')}
-      </ul>`;
-    const buildingsSection = document.getElementById('buildings');
-    buildingsSection.innerHTML = `
+      <ul class="stats-list">${data.map(b => `<li>${b.name}</li>`).join('')}</ul>`;
+    document.getElementById('buildings').innerHTML = `
       <h2 class="section-title">Buildings</h2>
       ${data.map(b => `
         <details>
@@ -162,8 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <li><strong>Built in:</strong> ${b.yearBuilt}</li>
             <li><strong>Last renovated:</strong> ${b.lastRenovationYear}</li>
           </ul>
-        </details>
-      `).join('')}`;
+        </details>`).join('')}`;
   }
   fetch(`${API_BASE}/api/buildings`)
     .then(r => r.json())
@@ -291,4 +315,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 });
-
