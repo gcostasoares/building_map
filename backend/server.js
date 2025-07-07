@@ -9,14 +9,11 @@ const Building = require('./models/Building');
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
-});
-
-
 app.use(cors({
-  origin: 'http://127.0.0.1:5500'
+  origin: [
+    'http://127.0.0.1:5500',
+    'https://building-map-frontend.onrender.com'
+  ]
 }));
 mongoose
   .connect(process.env.MONGO_URI)
