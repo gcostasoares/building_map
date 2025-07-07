@@ -593,7 +593,7 @@ ellipse:hover, path[fill="#8AC7E6"]:hover, polygon[fill="#8AC7E6"]:hover {
 
   .map-figure svg {
     width: 100%;
-    height: 70vh;
+    height: 55vh !important;
   }
 
   .logo {
