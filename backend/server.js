@@ -9,25 +9,25 @@ const Building = require('./models/Building');
 const app = express();
 app.use(express.json());
 
-// enable CORS for your front-end origin
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
+});
+
+
 app.use(cors({
   origin: 'http://127.0.0.1:5500'
 }));
-
-// 1) Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI /*, no need for useNewUrlParser/useUnifiedTopology on v4+ */)
+  .connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// 2) Routes
 
-// Health check
 app.get('/', (_req, res) => {
   res.send('🏠 Building API is up!');
 });
 
-// GET all buildings
 app.get('/api/buildings', async (_req, res) => {
   try {
     const all = await Building.find();
@@ -37,7 +37,6 @@ app.get('/api/buildings', async (_req, res) => {
   }
 });
 
-// GET one building by ID
 app.get('/api/buildings/:id', async (req, res) => {
   try {
     const b = await Building.findById(req.params.id);
@@ -58,7 +57,6 @@ app.post('/api/buildings', async (req, res) => {
   }
 });
 
-// (Optional) PUT to update a building
 app.put('/api/buildings/:id', async (req, res) => {
   try {
     const updated = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -69,7 +67,6 @@ app.put('/api/buildings/:id', async (req, res) => {
   }
 });
 
-// (Optional) DELETE a building
 app.delete('/api/buildings/:id', async (req, res) => {
   try {
     const del = await Building.findByIdAndDelete(req.params.id);
